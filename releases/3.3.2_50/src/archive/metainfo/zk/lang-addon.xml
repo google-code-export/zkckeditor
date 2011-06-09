@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- lang-addon.xml
+	Purpose:
+		
+	Description:
+		
+	History:
+		Tue Oct 7 17:56:45     2009, Created by jimmyshiau
+
+Copyright (C) 2009 Potix Corporation. All Rights Reserved.
+-->
+
+<language-addon>
+	<!-- The name of this addon. It must be unique -->
+	<addon-name>ckez</addon-name>
+	<!-- Specifies what other addon this depends
+	<depends></depends>
+	-->
+
+	<version>
+		<version-class>org.zkforge.ckez.Version</version-class>
+		<version-uid>3.3.2_50</version-uid>
+		<zk-version>5.0.0</zk-version><!-- or later -->
+	</version>
+
+	<!-- Which language this addon will be added to -->
+	<language-name>xul/html</language-name>
+
+	<!-- [Optional, Multiple] Define a JavaScript module.
+		Change the version if JS files are modified, such that
+		browsers will reload them.
+		Note: It defines only the version. It doesn't cause ZK to load it.
+	-->
+	<javascript-module name="ckez.ckez" version="3.3.2_50"/>
+
+	<zscript>
+	import org.zkforge.ckez.*;
+	</zscript>
+
+	<component>
+		<component-name>ckeditor</component-name>
+		<component-class>org.zkforge.ckez.CKeditor</component-class>
+		<widget-class>ckez.CKeditor</widget-class>	
+	</component>
+</language-addon>

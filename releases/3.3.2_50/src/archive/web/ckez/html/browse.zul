@@ -1,0 +1,192 @@
+<?taglib uri="http://www.zkoss.org/dsp/web/core" prefix="c" ?>
+<zk>
+	<style>
+		.ckTree span.z-filetree-tee, span.z-filetree-last {
+			background-image: url(${c:encodeURL('~./zul/img/tree/folder-toggle.gif')});
+			background-position:0 -18px;
+		}
+		.ckImg .z-toolbarbutton-cnt img {
+			display:block;
+			max-height:100px;
+			max-width:100px;
+			margin:0 auto;
+		}
+		.ckImg .z-toolbarbutton-cnt {
+			text-align:center;
+		}
+		.ckImg .z-toolbarbutton-over {
+			background-color:#DFF1FF;
+			border-color:#99CCFF;
+		}
+		.ckImg .sel {
+			background-color:#B4D9FF;
+			padding:0;
+			border-bottom: 1px solid #6565FE;
+			border-top: 1px solid #6565FE;
+		}
+		.ckImg .sel .z-toolbarbutton-body{
+			padding:0;
+			border-left: 1px solid #6565FE;
+			border-right: 1px solid #6565FE;
+		}
+	</style>
+	<zscript><![CDATA[
+		import java.io.*;
+		import java.util.*;
+		import org.zkoss.zk.ui.Component;
+		import org.zkoss.zk.ui.Executions;
+		import org.zkoss.zk.ui.util.GenericForwardComposer;
+		import org.zkoss.zul.*;
+		import org.zkoss.zk.ui.event.EventListener;
+		
+		public class Composer extends GenericForwardComposer {
+			
+			private String pagePath = "";
+			private String[] excludeFolders = {"WEB-INF","META-INF"};
+			private String[] excludeFiles = {};
+			private String[] includeImageFileExtensions = {"gif","jpeg","bmp","png","tif"};
+			private Map escapeMap = new HashMap();
+			private Map rootFolderMap = new TreeMap();
+			private int CKEditorFuncNum = 1;
+			private String apName = "";
+			private boolean isShowAllFiles = false;
+			
+			
+			private Tree tree;
+			private Div cntDiv;
+			private Toolbarbutton selBtn;
+			
+			public void doAfterCompose(Component comp) throws Exception {
+				super.doAfterCompose(comp);
+				tree = (Tree)comp.getFellow("tree");
+				cntDiv = (Div)comp.getFellow("cntDiv");
+				
+				
+				String type = ((String[])param.get("Type"))[0];
+				
+				for (int i = 0, j = excludeFolders.length; i < j; i++)
+					escapeMap.put(excludeFolders[i], "");
+				for (int i = 0, j = excludeFiles.length; i < j; i++)
+					escapeMap.put(excludeFiles[i], "");
+				
+				if (type.equals("Flash"))
+					escapeMap.put("swf", "");
+				else if (type.equals("Images"))
+					for (int i = 0, j = includeImageFileExtensions.length; i < j; i++)
+						escapeMap.put(includeImageFileExtensions[i], "");
+				else isShowAllFiles = true;	
+				
+				
+				
+				String path = ((String[])param.get("filebrowserBrowseUrl"))[0];
+				CKEditorFuncNum = Integer.valueOf(((String[])param.get("CKEditorFuncNum"))[0]);
+				int index = path.indexOf("/", 1);
+				apName = path.substring(0, index);
+				pagePath = path.substring(index);
+				
+				Map map = new TreeMap();
+				rootFolderMap.put(pagePath.substring(pagePath.lastIndexOf("/")),map);
+				
+				if (application.getResourcePaths(pagePath) == null)
+					throw new UiException("Folder not found: "+pagePath);
+				
+				processFolder(pagePath, map);
+				tree.setTreeitemRenderer(new TreeitemRenderer() {
+					public void render(Treeitem item, Object data) throws Exception {
+						Map.Entry entry = (Map.Entry)((SimpleTreeNode)data).getData();
+						item.setLabel(String.valueOf(entry.getKey()));
+						Object value = entry.getValue();
+						item.setValue(value);
+						item.setOpen(true);
+						if (item.getParentItem() == null)
+							item.setSelected(true);
+					}
+				});
+				
+				tree.setModel(new SimpleTreeModel(new SimpleTreeNode("ROOT",initTreeModel(rootFolderMap, new ArrayList()))));
+				
+				showImages(map);
+			}
+		
+			
+			private List initTreeModel(Map parentFolderMap, List list) {
+				for (Iterator it = parentFolderMap.entrySet().iterator(); it.hasNext();) {
+					Map.Entry entry = (Map.Entry)it.next();
+					Object key = entry.getKey();
+					Object value = entry.getValue();
+					
+					if (value instanceof Map) {
+						Map map = (Map) value;
+						if (map.size() == 0) continue;
+						ArrayList al = new ArrayList();
+						list.add(new SimpleTreeNode(entry, al));
+						initTreeModel(map, al);
+					}
+				}
+				return list;
+			}
+			private Map processFolder(String path,Map parentFolderMap) {
+				for (Object obj : application.getResourcePaths(path)) {
+					String pagePath = String.valueOf(obj);
+					
+					if (pagePath.endsWith("/")) {
+						String folderName = pagePath.substring(0, pagePath.length() - 1);
+						folderName = folderName.substring(folderName.lastIndexOf("/") + 1);
+						if (escapeMap.get(folderName) != null)
+							continue;
+						parentFolderMap.put(folderName, processFolder(pagePath, new TreeMap()));
+					} else {
+						String fileName = pagePath.substring(pagePath.lastIndexOf("/") + 1);
+						String extension = fileName.substring(fileName.lastIndexOf(".") + 1);
+						if (escapeMap.get(fileName) != null || 
+								(!isShowAllFiles && escapeMap.get(extension) == null))
+							continue;
+						parentFolderMap.put(fileName, pagePath);
+					}
+				}
+				return parentFolderMap;
+			}
+			public void onSelect$tree(){
+				cntDiv.getChildren().clear();
+				Treeitem item = tree.getSelectedItem();
+				Map map = (Map)item.getValue();
+				
+				showImages(map);
+			}
+			private void showImages(Map map){
+				for (Iterator it = map.entrySet().iterator(); it.hasNext();) {
+					Map.Entry me = (Map.Entry) it.next();
+					Object value = me.getValue();
+					if (value instanceof Map) continue;
+					String path = String.valueOf(value);
+					String swfPath = "";
+					if (path.endsWith("swf"))
+						swfPath = "~./ckez/img/flashIcon.jpg";
+					Toolbarbutton tb = new Toolbarbutton(String.valueOf(me.getKey()), "".equals(swfPath)? path: swfPath);
+					tb.addEventListener("onClick", new EventListener() {
+						public void onEvent(Event event) throws Exception {
+							if (selBtn !=null)
+								selBtn.setSclass(null);
+							selBtn = (Toolbarbutton) event.getTarget();
+							selBtn.setSclass("sel");
+						}
+					});
+					
+					String script = "window.opener.CKEDITOR.tools.callFunction("+CKEditorFuncNum+", '" + apName + path + "'); window.close(); ";
+					tb.setWidgetListener("onDoubleClick",script);
+					
+					cntDiv.appendChild(tb);
+				}
+				
+			}
+		}
+	]]></zscript>
+	<borderlayout apply="Composer">
+		<west size="20%" splittable="true">
+			<tree id="tree" zclass="z-filetree" sclass="ckTree"/>
+		</west>
+		<center autoscroll="true">
+			<div id="cntDiv" sclass="ckImg"/>
+		</center>
+	</borderlayout>
+</zk>
