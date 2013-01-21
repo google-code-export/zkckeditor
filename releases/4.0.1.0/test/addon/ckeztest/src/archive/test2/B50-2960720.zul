@@ -1,0 +1,50 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+B50-2960720.zul
+
+	Purpose:
+		
+	Description:
+		
+	History:
+		Thu Jan  7 10:05:22 TST 2010, Created by jimmyshiau
+
+Copyright (C) 2009 Potix Corporation. All Rights Reserved.
+
+-->
+<zk>
+<html><![CDATA[
+<ol>
+<li>click submit, the content of editor will not disappear</li>
+</ol>
+]]>
+</html>
+	<window id="win" title="Test" mode="overlapped" width="100%">
+	<div>
+		<ckeditor id="ed" autoHeight="true">
+		<attribute name="value">
+		<![CDATA[
+		<table width="200" cellspacing="1" cellpadding="1" border="1">
+		    <tbody>
+		        <tr style="background: #B7B313; color:white;">
+		            <td>First Name</td>
+		            <td>Last Name</td>
+		        </tr>
+		        <tr>
+		            <td>Jone</td>
+		            <td>Hayes1</td>
+		        </tr>
+		        <tr>
+		            <td>Mary</td>
+		            <td>Bally</td>
+		        </tr>
+		    </tbody>
+		</table>
+		]]>
+		</attribute>
+	</ckeditor></div>
+		<button label="Submit"
+			onClick="win.setTitle(new Date().toString());" />
+	</window>
+</zk>

@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!-- zk.wpd
+	Purpose:
+		
+	Description:
+		
+	History:
+		Tue Oct 6 19:50:59     2009, Created by jimmyshiau
+
+Copyright (C) 2009 Potix Corporation. All Rights Reserved.
+-->
+
+<package name="ckez" language="xul/html" depends="zul">	
+	<script>
+		var packagePath = zk.ajaxURI('/web/js/ckez/ext/CKeditor/', {desktop : this.desktop,au : true});
+		window.CKEDITOR_BASEPATH = packagePath.substr(0, packagePath.lastIndexOf("/")+1);
+	</script>
+	
+	<script src="ext/CKeditor/ckeditor.js"/>
+	<script src="ext/CKeditor/adapters/jquery.js"/>
+
+	<widget name="CKeditor"/>
+</package>
