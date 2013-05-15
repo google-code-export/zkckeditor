@@ -252,7 +252,7 @@ depends="deploy.export, deploy.lib, deploy.tomcat, deploy.jboss">
 	<delete quiet="true" dir="${bin.dir}"/>
 </target>
 
-<target name="clean" depends="clean.all, clean.bin">
+<target name="clean" depends="clean.all">
 	<delete quiet="true" dir="${out.dir}"/>
 	<delete quiet="true" dir="${tmp.dir}"/>
 	<delete quiet="true" dir="${outv.dir}"/>
